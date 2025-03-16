@@ -1,0 +1,80 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taskify</title>
+    <!-- Link to the CSS file -->
+    <link rel="stylesheet" href="{% static 'tasks/css/styles.css' %}">
+
+</head>
+<body>
+    <!-- Dark Mode Toggle -->
+    <div class="dark-mode-toggle" id="darkModeToggle">
+        🌓
+    </div>
+
+    <!-- Background Shapes -->
+    <div class="background">
+        <div class="shape circle" style="top: 10%; left: 5%; width: 100px; height: 100px; animation-duration: 8s;"></div>
+        <div class="shape square" style="top: 20%; right: 10%; width: 80px; height: 80px; animation-duration: 12s;"></div>
+        <div class="shape triangle" style="bottom: 15%; left: 20%; animation-duration: 10s;"></div>
+        <div class="shape circle" style="bottom: 5%; right: 15%; width: 90px; height: 90px; animation-duration: 9s;"></div>
+        <div class="shape square" style="top: 30%; left: 40%; width: 70px; height: 70px; animation-duration: 11s;"></div>
+    </div>
+
+    <!-- To-Do List Container -->
+    <div class="container">
+        <h1>Taskify</h1>
+        <h3>Organize Your Chaos, One Task at a Time</h3>
+        <form class="task-form" id="taskForm" method="POST" action="{% url 'add_task' %}">
+            {% csrf_token %}
+            <input type="text" id="taskInput" name="title" placeholder="Add a new task" required>
+            <select id="taskCategory" name="category">
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Shopping">Shopping</option>
+            </select>
+            <select id="taskPriority" name="priority">
+                <option value="High">High Priority</option>
+                <option value="Medium">Medium Priority</option>
+                <option value="Low">Low Priority</option>
+            </select>
+            <input type="datetime-local" id="taskDateTime" name="dateTime" required>
+            <button type="submit">Add Task</button>
+        </form>
+        <input type="text" id="searchInput" placeholder="Search tasks...">
+        <ul class="task-list" id="taskList">
+            <!-- Tasks will be dynamically added here or rendered by Django -->
+            {% for task in tasks %}
+            <li class="{% if task.completed %}completed{% endif %}">
+                <span>{{ task.title }}</span>
+                <div>
+                    <a href="{% url 'toggle_task' task.id %}">✔️</a>
+                    <a href="{% url 'delete_task' task.id %}"> 
+                        <img src="https://img.icons8.com/ios-filled/24/ff3b30/trash.png" alt="Delete" style="width: 20px; height: 20px;"/>
+                    </a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Description Display Area -->
+    <div class="description-display" id="descriptionDisplay">
+        <h3>Task Description</h3>
+        <p id="displayText">Click on a task to see its description.</p>
+    </div>
+
+    <!-- Task Description Box -->
+    <div class="description-box">
+        <h3>Add Task Description <span class="pinned-icon">❤️📌</span></h3>
+        <textarea id="taskDescription" placeholder="Add task description..."></textarea>
+    </div>
+
+    <!-- Link to the JavaScript file -->
+    <script src="{% static 'tasks/js/scripts.js' %}"></script>
+
+</body>
+</html>
