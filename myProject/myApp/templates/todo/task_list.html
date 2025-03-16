@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taskify</title>
+    <style>
+        /* Dark Mode Variables */
+        :root {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --container-bg: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(255, 255, 255, 0.2);
+            --button-bg: #007aff;
+            --button-hover: #0063cc;
+            --task-bg: rgba(255, 255, 255, 0.1);
+            --task-hover: rgba(255, 255, 255, 0.2);
+            --completed-task: rgba(255, 255, 255, 0.5);
+            --shape-bg: rgba(255, 255, 255, 0.1);
+            --shape-border: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Light Mode Variables */
+        [data-theme="light"] {
+            --bg-color: linear-gradient(135deg, #ff9a9e, #fad0c4, #fbc2eb, #a6c1ee, #84fab0);
+            --text-color: #1d1d1f;
+            --container-bg: rgba(255, 255, 255, 0.2);
+            --input-bg: rgba(255, 255, 255, 0.3);
+            --button-bg: #007aff;
+            --button-hover: #0063cc;
+            --task-bg: rgba(255, 255, 255, 0.3);
+            --task-hover: rgba(255, 255, 255, 0.4);
+            --completed-task: rgba(29, 29, 31, 0.5);
+            --shape-bg: rgba(255, 255, 255, 0.2);
+            --shape-border: rgba(255, 255, 255, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg-color);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: row; /* Changed to row for side-by-side layout */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            transition: background-color 0.3s, color 0.3s;
+            gap: 20px; /* Added gap between containers */
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Background Design */
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            background: var(--shape-bg);
+            border: 1px solid var(--shape-border);
+            animation: float 10s infinite ease-in-out;
+        }
+
+        .circle {
+            border-radius: 50%;
+        }
+
+        .square {
+            border-radius: 10px;
+        }
+
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 100px solid var(--shape-bg);
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(10deg);
+            }
+        }
+
+        /* Container */
+        .container {
+            background: var(--container-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh; /* Increased container height */
+            overflow: hidden; /* Hide overflow */
+            display: flex;
+            flex-direction: column;
+            animation: glow 2s infinite alternate;
+            transition: background 0.3s;
+        }
+
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.2), 0 0 20px rgba(255, 255, 255, 0.2);
+            }
+            100% {
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 40px rgba(255, 255, 255, 0.4);
+            }
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700; /* Bold title */
+            margin-bottom: 10px;
+            text-align: center;
+            color: var(--text-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: 600; /* Made it slightly bolder */
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--text-color);
+            opacity: 0.8; /* Slightly faded for elegance */
+        }
+
+        .task-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* iOS-style Input Fields */
+        .task-form input,
+        .task-form select,
+        .task-form input[type="datetime-local"] {
+            padding: 12px;
+            background: var(--input-bg);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px; /* Rounded corners */
+            font-size: 16px;
+            color: var(--text-color);
+            appearance: none; /* Remove default arrow */
+            -webkit-appearance: none; /* Remove default arrow for Safari */
+            -moz-appearance: none; /* Remove default arrow for Firefox */
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); /* Custom dropdown arrow */
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+            padding-right: 32px; /* Space for arrow */
+        }
+
+        .task-form input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .task-form button {
+            padding: 12px 20px;
+            background-color: var(--button-bg);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px; /* Rounded corners */
+            font-size: 16px;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .task-form button:hover {
+            background-color: var(--button-hover);
+            box-shadow: 0 0 10px rgba(0, 122, 255, 0.8), 0 0 20px rgba(0, 122, 255, 0.8);
+        }
+
+        .task-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto; /* Make task list scrollable */
+            max-height: 60vh; /* Increased task list height */
+            flex-grow: 1; /* Allow task list to grow within container */
+        }
+
+        .task-list li {
+            background: var(--task-bg);
+            padding: 12px;
+            border-radius: 12px; /* Rounded corners */
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+            cursor: pointer; /* Change cursor to pointer */
+        }
+
+        .task-list li:hover {
+            background: var(--task-hover);
+        }
+
+        .task-list li.completed {
+            text-decoration: line-through;
+            color: var(--completed-task);
+        }
+
+        .task-list li button {
+            background-color: transparent; /* No background */
+            border: none; /* No border */
+            cursor: pointer;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .task-list li button:hover {
+            box-shadow: 0 0 10px rgba(255, 59, 48, 0.8), 0 0 20px rgba(255, 59, 48, 0.8);
+        }
+
+        .task-list li .tick {
+            background-color: #34c759;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .task-list li .tick:hover {
+            background-color: #248a3d;
+            box-shadow: 0 0 10px rgba(52, 199, 89, 0.8), 0 0 20px rgba(52, 199, 89, 0.8);
+        }
+
+        .dark-mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--container-bg);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .dark-mode-toggle:hover {
+            background: var(--task-hover);
+        }
+
+        /* Description Box */
+        .description-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            transition: all 0.3s;
+            margin-top: 20px; /* Added margin for spacing */
+        }
+
+        .description-box:hover {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 40px rgba(255, 255, 255, 0.4);
+        }
+
+        .description-box h3 {
+            margin: 0 0 10px;
+            color: var(--text-color);
+        }
+
+        .description-box textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            resize: none; /* Prevent resizing */
+        }
+
+        .description-box textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Description Display Area */
+        .description-display {
+            background: var(--container-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+            max-width: 400px;
+            color: var(--text-color);
+        }
+
+        .description-display h3 {
+            margin: 0 0 10px;
+        }
+
+        .description-display p {
+            margin: 0;
+        }
+
+        /* Pinned Icon */
+        .pinned-icon {
+            margin-left: 5px;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Dark Mode Toggle -->
+    <div class="dark-mode-toggle" id="darkModeToggle">
+        🌓
+    </div>
+
+    <!-- Background Shapes -->
+    <div class="background">
+        <div class="shape circle" style="top: 10%; left: 5%; width: 100px; height: 100px; animation-duration: 8s;"></div>
+        <div class="shape square" style="top: 20%; right: 10%; width: 80px; height: 80px; animation-duration: 12s;"></div>
+        <div class="shape triangle" style="bottom: 15%; left: 20%; animation-duration: 10s;"></div>
+        <div class="shape circle" style="bottom: 5%; right: 15%; width: 90px; height: 90px; animation-duration: 9s;"></div>
+        <div class="shape square" style="top: 30%; left: 40%; width: 70px; height: 70px; animation-duration: 11s;"></div>
+    </div>
+
+    <!-- To-Do List Container -->
+    <div class="container">
+        <h1>Taskify</h1>
+        <h3>Organize Your Chaos, One Task at a Time</h3>
+        <form class="task-form" id="taskForm">
+            <input type="text" id="taskInput" placeholder="Add a new task" required>
+            <select id="taskCategory">
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Shopping">Shopping</option>
+            </select>
+            <select id="taskPriority">
+                <option value="High">High Priority</option>
+                <option value="Medium">Medium Priority</option>
+                <option value="Low">Low Priority</option>
+            </select>
+            <input type="datetime-local" id="taskDateTime" required>
+            <button type="submit">Add Task</button>
+        </form>
+        <input type="text" id="searchInput" placeholder="Search tasks...">
+        <ul class="task-list" id="taskList">
+            <!-- Tasks will be dynamically added here -->
+        </ul>
+    </div>
+
+    <!-- Description Display Area -->
+    <div class="description-display" id="descriptionDisplay">
+        <h3>Task Description</h3>
+        <p id="displayText">Click on a task to see its description.</p>
+    </div>
+
+    <!-- Task Description Box -->
+    <div class="description-box">
+        <h3>Add Task Description <span class="pinned-icon">📌</span></h3>
+        <textarea id="taskDescription" placeholder="Add task description..."></textarea>
+    </div>
+
+    <script>
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+
+        darkModeToggle.addEventListener('click', () => {
+            body.dataset.theme = body.dataset.theme === 'light' ? 'dark' : 'light';
+        });
+
+        // Load tasks from localStorage
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+        // Function to save tasks to localStorage
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Function to add a task
+        function addTask(taskText, taskCategory, taskPriority, taskDateTime, taskDescription) {
+            const taskList = document.getElementById('taskList');
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${taskText} (${taskCategory}, ${taskPriority}, Due: ${new Date(taskDateTime).toLocaleString()})</span>
+                <div>
+                    <button class="tick" onclick="completeTask(this)">✔️</button>
+                    <button onclick="removeTask(this)">
+                        <img src="https://img.icons8.com/ios-filled/24/ff3b30/trash.png" alt="Delete" style="width: 20px; height: 20px;"/>
+                    </button>
+                </div>
+            `;
+            li.addEventListener('click', () => {
+                displayDescription(taskDescription);
+            });
+            taskList.appendChild(li);
+
+            // Add task to the tasks array
+            tasks.push({ text: taskText, category: taskCategory, priority: taskPriority, dateTime: taskDateTime, description: taskDescription, completed: false });
+            saveTasks();
+        }
+
+        // Function to display the task description
+        function displayDescription(description) {
+            const displayText = document.getElementById('displayText');
+            displayText.textContent = description || "No description available.";
+        }
+
+        // Function to remove a task
+        function removeTask(button) {
+            const li = button.parentElement.parentElement;
+            const taskText = li.querySelector('span').textContent.split(' (')[0];
+            tasks = tasks.filter(task => task.text !== taskText);
+            saveTasks();
+            li.remove();
+        }
+
+        // Function to mark a task as completed
+        function completeTask(button) {
+            const li = button.parentElement.parentElement;
+            li.classList.toggle('completed');
+            const taskText = li.querySelector('span').textContent.split(' (')[0];
+            const task = tasks.find(task => task.text === taskText);
+            task.completed = true;
+            saveTasks();
+        }
+
+        // Function to search tasks
+        document.getElementById('searchInput').addEventListener('input', function(event) {
+            const searchText = event.target.value.toLowerCase();
+            const taskList = document.getElementById('taskList');
+            taskList.querySelectorAll('li').forEach(li => {
+                const taskText = li.querySelector('span').textContent.toLowerCase();
+                if (taskText.includes(searchText)) {
+                    li.style.display = 'flex';
+                } else {
+                    li.style.display = 'none';
+                }
+            });
+        });
+
+        // Load tasks on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            tasks.forEach(task => {
+                addTask(task.text, task.category, task.priority, task.dateTime, task.description);
+                if (task.completed) {
+                    const taskList = document.getElementById('taskList');
+                    const li = taskList.lastChild;
+                    li.classList.add('completed');
+                }
+            });
+        });
+
+        // Handle form submission
+        document.getElementById('taskForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const taskInput = document.getElementById('taskInput');
+            const taskCategory = document.getElementById('taskCategory').value;
+            const taskPriority = document.getElementById('taskPriority').value;
+            const taskDateTime = document.getElementById('taskDateTime').value;
+            const taskText = taskInput.value.trim();
+            const taskDescription = document.getElementById('taskDescription').value.trim(); // Get description
+            if (taskText !== '' && taskDateTime) {
+                addTask(taskText, taskCategory, taskPriority, taskDateTime, taskDescription);
+                taskInput.value = '';
+                document.getElementById('taskDescription').value = ''; // Clear description
+            }
+        });
+    </script>
+</body>
+</html>
